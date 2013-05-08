@@ -1,81 +1,77 @@
-library(Matrix)
-library(glmnet)
-library(ROCR)
-library(e1071)
-
-train <- read.csv("cs-training.csv")
-train$X <- NULL
-names(train) <- c("class", "reutil", "age", "past30.59", "debt", "income",
-"credits", "past90", "realest", "past60.89", "deps")
-test <- read.csv("cs-test.csv")
-test$X <- NULL
-
-clean <- function(data) {
-  cols <- c(4, 8, 10)
-  for (col in cols) {
-    na_mask <- data[,col]==98|data[,col]==96
-    data[,col][na_mask] <- 0
-  }
-  has_past <- rep(1, nrow(data))
-  has_past[na_mask] <- 0
-  has_age <- rep(1, nrow(data))
-  has_age[data[,3]==0] <- 0
-  has_income <- rep(1, nrow(data))
-  has_income[is.na(data[,6])] <- 0
-  data[,6][is.na(data[,6])] <- 0
-  has_dep <- rep(1, nrow(data))
-  has_dep[is.na(data[,11])] <- 0
-  data[,11][is.na(data[,11])] <- 0
-  data <- cbind(data, has_age, has_past, has_income, has_dep) 
-  return(data)
-}
-
-train_cl <- clean(train)
-test_cl <- clean(test)
-test_x <- as.matrix(test_cl[,-1])
-
-# Perfect separation
-#f1 <-
-#class~reutil+age+has_age+past30.59+has_past+debt+income+has_income+credits+past90+realest+past60.89+deps+has_dep
-#fit1 <- glm(f1, family=binomial(link=logit), data=train_cl)
+source("data_prep.R")
+source("common.R")
 
 # L1 Regularized
-x <- as.matrix(train_cl[,-1])
-y <- Matrix(train_cl[,1], sparse=TRUE)
-f2cv <- cv.glmnet(x, y, family="binomial", type.measure="auc")
-f2cv$lambda.min # 0.01600967
-coef(f2cv)
-#                       1
-#(Intercept) -2.153392672
-#reutil       .
-#age         -0.004179375
-#past30.59    0.419407589
-#debt         .
-#income       .
-#credits      .
-#past90       0.639612271
-#realest      .
-#past60.89    0.521797851
-#deps         .
-#has_age      .
-#has_past    -0.622161958
-#has_income   .
-#has_dep      .
-f2fitted <- predict(f2cv, x, s="lambda.min", type="response")
-f2p <- prediction(f2fitted, as.vector(y))
-f2perf <- performance(f2p,"tpr","fpr")
-f2auc <- performance(f2p, "auc", fpr.stop=0.5)
-f2pred <- predict(f2cv, test_x, s="lambda.min", type="response") 
-f2submit <- data.frame(pred=f2pred)
-write.csv(f2submit, file="l1logit.csv") # 0.821799
+l1logit <- function(train_set, test_set) {
+  x <- as.matrix(train_set[,-1])
+  y <- Matrix(train_set[,1], sparse=TRUE)
+  cv <- cv.glmnet(x, y, family="binomial", type.measure="auc", nfolds=5)
+  pred <- predict(cv, test_set[,-1], s="lambda.min", type="response")
+  p <- prediction(pred, test_set[,1])
+  return(list(pred=pred, p=p, cv=cv))
+}
 
 # Naive Bayes
-nb <- naiveBayes(x, as.vector(y))
-nbfitted <- predict(nb, x, type="raw")
-nbp <- prediction(nbfitted[,2], as.vector(y))
-nbperf <- performance(nbp,"tpr","fpr")
-nbauc <- performance(nbp, "auc", fpr.stop=0.5)
-nbpred <- predict(nb, test_x, type="raw")
-nbsubmit <- data.frame(pred=nbpred[,2])
-write.csv(nbsubmit, file="nb.csv") # 0.629919
+nb <- function(train_set, test_set) {
+  train <- naiveBayes(train_set[ ,-1], train_set[ ,1])
+  fitted <- predict(train, test_set[ ,-1], type="raw")[,2]
+  p <- prediction(fitted, test_set[ ,1])
+  return(list(pred=fitted, p=p))
+}
 
+## Bagging
+
+# Naive Bayes
+bagging_nb <- function(train_set, test_set, iterations) {
+  n <- nrow(train_set)
+  probs <- foreach(i=1:iterations, .combine=cbind) %dopar% {
+    sampled <- sample(1:n, n, replace=TRUE)
+    x <- train_set[sampled, -1]
+    y <- train_set[sampled, 1]
+    nb <- naiveBayes(x, y) #5.299
+    fitted <- predict(nb, test_set[ ,-1], type="raw") #32.125
+    fitted[,2]
+  }
+  pred <- rowMeans(probs)
+  p <- prediction(pred, test_set[, 1])
+  return(p)
+}
+
+# Logistic
+bagging_logit <- function(train_set, test_set, iterations) {
+  n <- nrow(train_set)
+  probs <- foreach(i=1:iterations, .combine=cbind) %dopar% {
+    sampled <- sample(1:n, n, replace=TRUE)
+    x <- as.matrix(train_set[sampled, -1])
+    y <- Matrix(train_set[sampled, 1], sparse=TRUE)
+    cv <- cv.glmnet(x, y, family="binomial", type.measure="auc",
+    nfolds=5) # 104.439
+    fitted <- predict(cv, test_set[ ,-1], s="lambda.min", type="response")
+    fitted
+  }
+  pred <- rowMeans(probs)
+  p <- prediction(pred, test_set[, 1])
+  return(p)
+}
+
+nb.p <- nb(train_set, test_set)$p
+nb.roc <- get_perf(nb.p)
+l1logit <- l1logit(train_set, test_set)$p
+l1logit.roc <- get_perf(l1logit.p)
+bag1000.nb.p <- bagging_nb(train_set, test_set, 1000)
+bag1000.nb.roc <- get_perf(bag1000.nb.p)
+bag1000.l1logit.p <- bagging_logit(train_set, test_set, 1000)
+bag1000.l1logit.roc <- get_perf(bag1000.l1logit.p)
+
+# Plots
+pdf("complots.pdf")
+plot(l1logit.roc, main="Performance On Hold Out Data Set")
+lines(nb.roc@x.values[[1]], nb.roc@y.values[[1]], col="red")
+lines(bag1000.l1logit.roc@x.values[[1]],
+bag1000.l1logit.roc@y.values[[1]], col="blue")
+lines(bag1000.nb.roc@x.values[[1]], bag1000.nb.roc@y.values[[1]],
+col="green")
+legend(0.2,0.3, c("L1 Regularized Logistic Regression", "Naive Bayes",
+"L1 Regularizaed Logistic Regression with Bagging", "Naive Bayes with
+Bagging"), lty=c(1,1), col=c("black", "red", "blue", "green"))
+dev.off()
