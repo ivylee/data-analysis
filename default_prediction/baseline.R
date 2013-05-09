@@ -8,13 +8,13 @@ l1logit <- function(train_set, test_set) {
   x <- as.matrix(train_set[,-1])
   y <- Matrix(train_set[,1], sparse=TRUE)
   cv <- cv.glmnet(x, y, family="binomial", type.measure="auc", nfolds=5)
-  pred <- predict(cv, test_set[,-1], s="lambda.min", type="response")
+  pred <- predict(cv, as.matrix(test_set[,-1]), s="lambda.min", type="response")
   p <- prediction(pred, test_set[,1])
   return(list(pred=pred, p=p, cv=cv))
 }
-#l1logit <- l1logit(train_set, test_set)
-#l1logit.cv <- l1logit$cv
-#l1logit.p <- l1logit$p
+#l1logit.o <- l1logit(train_set, test_set)
+#l1logit.cv <- l1logit.o$cv
+#l1logit.p <- l1logit.o$p
 #l1logit.roc <- get_perf(l1logit.p)
 #l1logit.fr <- get_perf(l1logit.p, "fr")
 #l1logit.train.cv <- cv.glmnet(train_data[,-1], train_data[,1],
