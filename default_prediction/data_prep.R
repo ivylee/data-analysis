@@ -28,7 +28,8 @@ clean <- function(data) {
 }
 
 standardize <- function(data) {
-   data_std <- scale(data, center=TRUE, scale=TRUE)
+   data_std <- scale(data[ ,-c(1,12:15)], center=TRUE, scale=TRUE)
+   data_std <- cbind(data[ ,c(1,12:15)], data_std)
    return(data_std)
 }
 
