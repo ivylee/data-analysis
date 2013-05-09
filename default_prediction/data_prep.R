@@ -46,9 +46,7 @@ train_data <- standardize(clean(train))
 train_split <- split(train_data)
 train_set <- train_split$train
 test_set <- train_split$test
-train_set_x <- train_set[ ,-1]
-train_set_y <- train_set[ ,1]
-test_set_x <- test_set[ ,-1]
-test_set_y <- test_set[ ,1]
 test_data <- standardize(clean(test))
-test_data_x <- test_data[ ,-1]
+
+# interactions
+
