@@ -2,12 +2,20 @@ library(R2jags)
 
 source("data_prep_jags.R")
 
-y <- train_data[,1]
-x1 <- train_data[,3]
-x2 <- train_data[,4]
-x3 <- train_data[,10]
-x4 <- train_data[,8]
-x5 <- train_data[,13]
+#sub_train_data<-subsample(train_data,10000,0.5)
+
+#y <- train_data[,1]
+#x1 <- train_data[,3]
+#x2 <- train_data[,4]
+#x3 <- train_data[,10]
+#x4 <- train_data[,8]
+#x5 <- train_data[,13]
+y <- sub_train_data[,1]
+x1 <- sub_train_data[,3]
+x2 <- sub_train_data[,4]
+x3 <- sub_train_data[,10]
+x4 <- sub_train_data[,8]
+x5 <- sub_train_data[,13]
 n <- length(y)
 a1 <- 1
 b1 <- 4
@@ -19,7 +27,7 @@ mu <- 52
 s <- 15
 
 jags.data <- list("y","x1","x2","x3","x4","x5","n","a1","b1","a2","b2","a3","b3")
-jags.params <- c("q","lambda","lambda1", "lambda2","lambda3","b0","b[1]","b[2]","b[3]","b[4]","b[5]","mu","s")
+jags.params <- c("q","lambda","lambda1", "lambda2","lambda3","beta0","beta1","beta2","beta3","beta4","beta5","mu","s")
 
 jagsmodel <- function() {
   # Likelihood
@@ -30,10 +38,9 @@ jagsmodel <- function() {
     x3[i] ~ dpois(lambda2)
     x4[i] ~ dpois(lambda3)
     x5[i] ~ dbern(q)
-    logit(p[i]) <- b0 + b[1]*x1[i] + b[2]*x2[i] + b[3]*x3[i] + b[4]*x4[i] + b[5]*x5[i]
+    logit(p[i]) <- beta0 + beta1*x1[i] + beta2*x2[i] + beta3*x3[i] + beta4*x4[i] + beta5*x5[i]
   }
   # Prior on constant term
-  b0 ~ dnorm(0,0.1)
   q ~ dunif(0,1)
   mu ~ dunif(40,60)
   s ~ dunif(10,20)
@@ -41,9 +48,12 @@ jagsmodel <- function() {
   lambda2 ~ dgamma(a2, b2)
   lambda3 ~ dgamma(a3, b3)
   # L1 regularization == a Laplace (double exponential) prior 
-  for (j in 1:5) {
-    b[j] ~ ddexp(0, lambda)  
-  }
+  beta0 ~ ddexp(0, lambda)
+  beta1 ~ ddexp(0, lambda)  
+  beta2 ~ ddexp(0, lambda)  
+  beta3 ~ ddexp(0, lambda)  
+  beta4 ~ ddexp(0, lambda)  
+  beta5 ~ ddexp(0, lambda)  
   lambda ~ dunif(0.001,10)
 }
 
