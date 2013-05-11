@@ -48,3 +48,8 @@ nb <- function(train_set, test_set) {
 #lines(nb.roc@x.values[[1]], nb.roc@y.values[[1]], col="red")
 #legend(0.4,0.2, c("L1 Regularized Logistic Regression", "Naive Bayes"),
 #lty=c(1,1), col=c("black", "red"))
+
+# Interaction terms, same result as without interactions
+#train_inter_set<-cbind(train_set, train_set$age*train_set$income, train_set$age*train_set$debt, train_set$age*train_set$credits, train_set$age*train_set$realest, train_set$age*train_set$deps, train_set$income*train_set$debt, train_set$age*train_set$reutil, train_set$income*train_set$credits, train_set$income*train_set$realest, train_set$income*train_set$deps+train_set$credits*train_set$debt+train_set$credits*train_set$realest+train_set$reutil*train_set$debt)
+#test_inter_set<-cbind(test_set, test_set$age*test_set$income, test_set$age*test_set$debt, test_set$age*test_set$credits, test_set$age*test_set$realest, test_set$age*test_set$deps, test_set$income*test_set$debt, test_set$age*test_set$reutil, test_set$income*test_set$credits, test_set$income*test_set$realest, test_set$income*test_set$deps+test_set$credits*test_set$debt+test_set$credits*test_set$realest+test_set$reutil*test_set$debt)
+#l1logit.inter<-l1logit(train_inter_set, test_inter_set)
