@@ -1,3 +1,9 @@
+#####################################
+# Title: Clean up data for JAGS/Stan
+# Author: Ivy Lee
+# Date: 11 May 2013
+#####################################
+
 train <- read.csv("cs-training.csv")
 train$X <- NULL
 names(train) <- c("class", "reutil", "age", "past30.59", "debt", "income",
