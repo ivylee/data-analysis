@@ -1,7 +1,7 @@
 #####################################
 # Title: Clean up data for JAGS/Stan
 # Author: Ivy Lee
-# Date: 11 May 2013
+# Date: 12 May 2013
 #####################################
 
 train <- read.csv("cs-training.csv")
@@ -34,18 +34,3 @@ clean <- function(data) {
 }
 
 train_data <- clean(train)
-
-subsample<- function(data, size, pos_rate) {
-  pos_mask <- train_data$class==1
-  neg_mask <- train_data$class==0
-  train_data_pos <- train_data[pos_mask,]
-  train_data_neg <- train_data[neg_mask,]
-  n_pos <- size*pos_rate
-  n_neg <- size*(1-pos_rate)
-  sub_data_pos <- train_data_pos[sample(1:nrow(train_data_pos), n_pos),]
-  sub_data_neg <- train_data_neg[sample(1:nrow(train_data_neg), n_neg),]
-  sub_sample <- rbind(sub_data_pos, sub_data_neg)
-  sub_sample <- sub_sample[sample.int(nrow(sub_sample)),]
-  return(sub_sample)
-}
-
