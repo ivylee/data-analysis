@@ -1,3 +1,9 @@
+############################################################## 
+# Title: Clean up data for logistic regression and naive bayes
+# Author: Ivy Lee
+# Date: 11 May 2013
+##############################################################
+
 train <- read.csv("cs-training.csv")
 train$X <- NULL
 names(train) <- c("class", "reutil", "age", "past30.59", "debt", "income",
@@ -47,6 +53,3 @@ train_split <- split(train_data)
 train_set <- train_split$train
 test_set <- train_split$test
 test_data <- standardize(clean(test))
-
-# interactions
-

@@ -1,3 +1,9 @@
+######################################### 
+# Title: JAGS code for hierarchical model
+# Author: Ivy Lee
+# Date: 11 May 2013
+#########################################
+
 library(R2jags)
 
 source("data_prep_jags.R")

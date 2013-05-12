@@ -1,3 +1,9 @@
+##############################
+# Title: Bagging and Ensemble
+# Author: Ivy Lee
+# Date: 11 May 2013
+##############################
+
 source("data_prep.R")
 source("common.R")
 
