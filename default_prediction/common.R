@@ -1,7 +1,14 @@
+######################################### 
+# Title: Libraries and shared functions
+# Author: Ivy Lee
+# Date: 11 May 2013
+#########################################
+
 library(Matrix)
 library(glmnet)
 library(ROCR)
 library(e1071)
+library(parallel)
 library(doMC)
 library(foreach)
 
