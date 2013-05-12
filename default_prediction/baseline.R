@@ -1,3 +1,9 @@
+############################################ 
+# Title: Logistic Regression and Naive Bayes
+# Author: Ivy Lee
+# Date: 11 May 2013
+############################################
+
 # Perfect separation
 #f1 <-
 #class~reutil+age+has_age+past30.59+has_past+debt+income+has_income+credits+past90+realest+past60.89+deps+has_dep
