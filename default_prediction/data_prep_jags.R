@@ -1,7 +1,7 @@
 #####################################
 # Title: Clean up data for JAGS/Stan
 # Author: Ivy Lee
-# Date: 11 May 2013
+# Date: 12 May 2013
 #####################################
 
 train <- read.csv("cs-training.csv")
