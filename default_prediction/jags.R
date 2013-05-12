@@ -2,59 +2,47 @@ library(R2jags)
 
 source("data_prep_jags.R")
 
-#sub_train_data<-subsample(train_data,10000,0.5)
+sub_train_data<-subsample(train_data,10000,0.5)
 
-#y <- train_data[,1]
-#x1 <- train_data[,3]
-#x2 <- train_data[,4]
-#x3 <- train_data[,10]
-#x4 <- train_data[,8]
-#x5 <- train_data[,13]
 y <- sub_train_data[,1]
-x1 <- sub_train_data[,3]
-x2 <- sub_train_data[,4]
-x3 <- sub_train_data[,10]
-x4 <- sub_train_data[,8]
-x5 <- sub_train_data[,13]
+x1 <- sub_train_data[,2]
+x2 <- sub_train_data[,3]
+x3 <- sub_train_data[,4]
+x4 <- sub_train_data[,5]
+x5 <- sub_train_data[,6]
+x6 <- sub_train_data[,7]
+x7 <- sub_train_data[,8]
+x8 <- sub_train_data[,9]
+x9 <- sub_train_data[,10]
+x10 <- sub_train_data[,11]
+x11 <- sub_train_data[,12]
+x12 <- sub_train_data[,13]
+x13 <- sub_train_data[,14]
 n <- length(y)
-a1 <- 1
-b1 <- 4
-a2 <- 3
-b2 <- 50
-a3 <- 9
-b3 <- 100
-mu <- 52
-s <- 15
 
-jags.data <- list("y","x1","x2","x3","x4","x5","n","a1","b1","a2","b2","a3","b3")
-jags.params <- c("q","lambda","lambda1", "lambda2","lambda3","beta0","beta1","beta2","beta3","beta4","beta5","mu","s")
+jags.data <- list("y","x1","x2","x3","x4","x5","x6","x7","x8","x9","x10","x11","x12","x13","n")
+jags.params <- c("lambda","lambda1", "lambda2","lambda3","beta0","beta")
 
 jagsmodel <- function() {
   # Likelihood
   for (i in 1:n) {
+#    p[i] ~ dunif(0,1)
     y[i] ~ dbern(p[i])
-    x1[i] ~ dnorm(mu, s)
-    x2[i] ~ dpois(lambda1)
-    x3[i] ~ dpois(lambda2)
-    x4[i] ~ dpois(lambda3)
-    x5[i] ~ dbern(q)
-    logit(p[i]) <- beta0 + beta1*x1[i] + beta2*x2[i] + beta3*x3[i] + beta4*x4[i] + beta5*x5[i]
+    x3[i] ~ dpois(lambda1)
+    x9[i] ~ dpois(lambda2)
+    x7[i] ~ dpois(lambda3)
+    logit(p[i]) <- beta0 + beta[1]*x1[i] + beta[2]*x2[i] + beta[3]*x3[i] + beta[4]*x4[i] + beta[5]*x5[i] + beta[6]*x6[i] + beta[7]*x7[i] + beta[8]*x8[i] + beta[9]*x9[i] + beta[10]*x10[i] + beta[11]*x11[i] + beta[12]*x12[i] + beta[13]*x13[i]
   }
-  # Prior on constant term
-  q ~ dunif(0,1)
-  mu ~ dunif(40,60)
-  s ~ dunif(10,20)
-  lambda1 ~ dgamma(a1, b1)
-  lambda2 ~ dgamma(a2, b2)
-  lambda3 ~ dgamma(a3, b3)
   # L1 regularization == a Laplace (double exponential) prior 
-  beta0 ~ ddexp(0, lambda)
-  beta1 ~ ddexp(0, lambda)  
-  beta2 ~ ddexp(0, lambda)  
-  beta3 ~ ddexp(0, lambda)  
-  beta4 ~ ddexp(0, lambda)  
-  beta5 ~ ddexp(0, lambda)  
-  lambda ~ dunif(0.001,10)
+  for (i in 1:13) {
+    beta[i] ~ ddexp(0, lambda)
+  }  
+  beta0 ~ dnorm(0, 1)
+  lambda ~ dunif(0.0001,10)
+  lambda1 ~ dunif(0,10)
+  lambda2 ~ dunif(0,10)
+  lambda3 ~ dunif(0,10)
 }
 
 #fit <- jags.parallel(data=jags.data, parameters.to.save=jags.params, n.chains=8, n.iter=10000,n.burnin=5000, model.file=jagsmodel)
+#jagsfit <- jags(data=jags.data, parameters.to.save=jags.params, n.iter=10, model.file=jagsmodel)
